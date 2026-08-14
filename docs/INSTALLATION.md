@@ -10,7 +10,7 @@
 ## 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/yolov8-object-detection-app.git
+git clone https://github.com/yazenemino/yolov8-object-detection-app.git
 cd yolov8-object-detection-app
 ```
 

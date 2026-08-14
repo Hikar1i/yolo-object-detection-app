@@ -7,6 +7,7 @@
   <img src="https://img.shields.io/badge/tests-pytest-0A9EDC?logo=pytest&logoColor=white" alt="Tests">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
   <img src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker Ready">
+  <img src="https://img.shields.io/github/stars/yazenemino/yolov8-object-detection-app?style=social" alt="GitHub stars">
 </p>
 
 <p align="center">
@@ -34,12 +35,35 @@
 | 🐳 **Dockerized** | One-command deployment, with a documented GPU-passthrough path |
 | 🔌 **REST API** | Optional FastAPI service (`/predict`, `/health`, `/models`) for headless integration |
 
-## 📸 Screenshots
+## 📸 Demo & Screenshots
 
-> Add your own screenshots after running the app locally — save them to
-> `assets/screenshots/` and reference them here, e.g.:
->
-> `![Image Detection Tab](assets/screenshots/image_detection.png)`
+### Image Detection
+Upload an image (or use a bundled sample) and get an annotated result
+side-by-side with the original, plus per-run stats (objects detected,
+inference time, effective FPS, unique classes).
+
+![Image Detection Example](assets/screenshots/01-image-detection-example.png)
+
+### Real-time Webcam Detection
+Live, in-browser webcam inference via `streamlit-webrtc` — detection runs
+server-side on each incoming frame. (Shown here is the tab's entry screen;
+the live feed requires a webcam-enabled browser session.)
+
+![Real-time Webcam Detection](assets/screenshots/02-real-time-webcam-demo.png)
+
+### Model Comparison
+Run two or more YOLOv8 variants (Nano, Small, Medium, ...) on the same
+image side-by-side, with a summary table of detections, inference time,
+parameter count, and published COCO mAP50-95.
+
+![Model Comparison Results](assets/screenshots/03-model-comparison-results.png)
+
+### Statistics & Analytics Dashboard
+Persistent detection history across the session — total runs, total
+objects detected, average inference time, detections per source type, and
+inference time per model.
+
+![Statistics Dashboard](assets/screenshots/04-statistics-dashboard.png)
 
 ## 🏗️ Architecture
 
@@ -93,7 +117,7 @@ yolov8-object-detection-app/
 ## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/<your-username>/yolov8-object-detection-app.git
+git clone https://github.com/yazenemino/yolov8-object-detection-app.git
 cd yolov8-object-detection-app
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
