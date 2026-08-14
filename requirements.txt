@@ -1,0 +1,28 @@
+# Core detection engine
+ultralytics==8.3.40
+torch==2.5.1
+torchvision==0.20.1
+
+# Web application
+streamlit==1.40.2
+streamlit-webrtc==0.47.9
+av==13.1.0
+
+# REST API (optional, docs/API.md)
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.19
+
+# Data & imaging
+opencv-python-headless==4.10.0.84
+numpy==1.26.4
+pandas==2.2.3
+Pillow==11.0.0
+
+# Testing
+pytest==8.3.4
+pytest-cov==6.0.0
+
+# Notebook tutorial
+jupyter==1.1.1
+matplotlib==3.9.3

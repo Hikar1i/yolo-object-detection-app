@@ -1,0 +1,27 @@
+services:
+  yolov8-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: yolov8-detection-app:latest
+    container_name: yolov8-detection-app
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./models:/app/models
+      - ./outputs:/app/outputs
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+    # --- GPU support (requires nvidia-container-toolkit on the host) ---
+    # Uncomment the block below to enable CUDA acceleration inside the
+    # container, and see docs/DEPLOYMENT.md for the one-time host setup.
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
