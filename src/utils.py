@@ -5,6 +5,8 @@ from __future__ import annotations
 import csv
 import io
 import logging
+import os
+import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -217,5 +219,39 @@ def validate_file_size(size_bytes: int) -> tuple[bool, str]:
     """
     max_bytes = config.MAX_UPLOAD_SIZE_MB * 1024 * 1024
     if size_bytes > max_bytes:
-        return False, f"File too large ({format_bytes(size_bytes)}). Max allowed: {config.MAX_UPLOAD_SIZE_MB} MB."
+        return False, f"文件过大（{format_bytes(size_bytes)}），最大允许 {config.MAX_UPLOAD_SIZE_MB} MB。"
     return True, ""
+
+
+def get_available_models() -> dict[str, str]:
+    """Combine official weights and saved local weights for the Web UI."""
+    models = dict(config.AVAILABLE_MODELS)
+    for path in sorted(config.MODELS_DIR.iterdir()):
+        if path.suffix.lower() == ".pt" and path.is_file() and not path.is_symlink():
+            models[f"本地模型：{path.name}"] = str(path.resolve())
+    return models
+
+
+def save_uploaded_model(filename: str, contents: bytes) -> Path:
+    """Save trusted weights atomically without replacing an existing file."""
+    if not filename or filename in {".", ".."} or any(c in filename for c in ("/", "\\", "\x00")):
+        raise ValueError("模型文件名无效，请使用不包含目录路径的文件名。")
+    if Path(filename).suffix.lower() != ".pt":
+        raise ValueError("仅支持上传 YOLO .pt 权重文件。")
+    if not contents:
+        raise ValueError("模型文件不能为空。")
+    valid, message = validate_file_size(len(contents))
+    if not valid:
+        raise ValueError(message)
+
+    destination = config.MODELS_DIR / filename
+    with tempfile.NamedTemporaryFile(dir=config.MODELS_DIR, suffix=".upload", delete=False) as temp:
+        temp_path = Path(temp.name)
+        try:
+            temp.write(contents)
+            temp.flush()
+            # Publish only a complete file; link refuses existing paths atomically.
+            os.link(temp_path, destination)
+        finally:
+            temp_path.unlink(missing_ok=True)
+    return destination

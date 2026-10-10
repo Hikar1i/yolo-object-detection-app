@@ -6,6 +6,7 @@ textColor = "#FAFAFA"
 font = "sans serif"
 
 [server]
+fileWatcherType = "poll"
 maxUploadSize = 200
 enableXsrfProtection = true
 

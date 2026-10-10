@@ -8,7 +8,7 @@ streamlit==1.40.2
 streamlit-webrtc==0.47.9
 av==13.1.0
 
-# REST API (optional, docs/API.md)
+# REST API (optional, project-docs/04-api.md)
 fastapi==0.115.6
 uvicorn[standard]==0.32.1
 python-multipart==0.0.19

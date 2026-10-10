@@ -38,7 +38,7 @@ def test_get_best_device_respects_explicit_choice() -> None:
 
 def test_get_best_device_auto_resolves_to_valid_string() -> None:
     device = get_best_device("auto")
-    assert device in {"cpu", "mps"} or device.isdigit()
+    assert device in {"cpu", "mps", "cuda:0"}
 
 
 def test_is_gpu_available_returns_bool() -> None:
@@ -116,3 +116,45 @@ def test_predict_image_on_sample() -> None:
     assert result.num_detections >= 0
     assert result.inference_time_ms > 0
     assert result.boxes.shape[1] == 4 if result.num_detections else True
+
+
+def test_auto_cuda_device_is_valid_for_pytorch(monkeypatch) -> None:
+    import torch
+
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    device = get_best_device()
+    assert torch.device(device) == torch.device("cuda:0")
+
+
+@pytest.mark.parametrize("modern", [False, True])
+@pytest.mark.parametrize("half_precision", [False, True])
+@pytest.mark.parametrize("mode", ["image", "batch", "video", "track"])
+def test_inference_uses_supported_precision_option(monkeypatch, modern, half_precision, mode) -> None:
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+
+    from src.detector import YOLODetector
+
+    monkeypatch.setattr("src.detector.DEFAULT_CFG_DICT", {"quantize": None} if modern else {})
+    detector = YOLODetector.__new__(YOLODetector)
+    detector.device = "cpu"
+    result = SimpleNamespace(speed={"inference": 1}, orig_img=np.zeros((8, 8, 3), dtype=np.uint8))
+    detector.model = Mock()
+    detector.model.predict.return_value = [result]
+    detector.model.track.return_value = [result]
+    monkeypatch.setattr(detector, "_to_detection_result", lambda result, elapsed: result)
+    cfg = InferenceConfig(half_precision=half_precision)
+    if mode == "image":
+        detector.predict_image(result.orig_img, cfg)
+    elif mode == "batch":
+        detector.predict_batch([result.orig_img], cfg)
+    else:
+        list(detector.predict_video_stream("video.mp4", cfg, use_tracking=mode == "track"))
+    called = detector.model.track if mode == "track" else detector.model.predict
+    kwargs = called.call_args.kwargs
+    if modern:
+        assert "half" not in kwargs
+        assert kwargs["quantize"] == (16 if half_precision else None)
+    else:
+        assert "quantize" not in kwargs
+        assert kwargs["half"] is half_precision

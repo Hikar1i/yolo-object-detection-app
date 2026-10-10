@@ -17,6 +17,7 @@ import numpy as np
 import torch
 from PIL import Image
 from ultralytics import YOLO
+from ultralytics.cfg import DEFAULT_CFG_DICT
 
 from src import config
 from src.utils import get_logger
@@ -65,6 +66,13 @@ class InferenceConfig:
     device: str = "auto"
     half_precision: bool = False
 
+    @property
+    def precision_kwargs(self) -> dict[str, int | bool | None]:
+        """Use the precision option supported by the installed Ultralytics."""
+        if "quantize" in DEFAULT_CFG_DICT:
+            return {"quantize": 16 if self.half_precision else None}
+        return {"half": self.half_precision}
+
 
 def get_best_device(preferred: str = "auto") -> str:
     """Resolve the best available inference device.
@@ -78,7 +86,7 @@ def get_best_device(preferred: str = "auto") -> str:
     if preferred != "auto":
         return preferred
     if torch.cuda.is_available():
-        return "0"
+        return "cuda:0"
     if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available():
         return "mps"
     return "cpu"
@@ -150,9 +158,9 @@ class YOLODetector:
         except Exception as exc:  # noqa: BLE001 - surface a friendly error upstream
             logger.exception("Failed to load model %s", model_name)
             raise RuntimeError(
-                f"Could not load model '{model_name}'. Ensure you have an internet "
-                f"connection for the first download, or that the weights file exists. "
-                f"Original error: {exc}"
+                f"无法加载模型 '{model_name}'。首次下载官方权重时请检查网络连接，"
+                f"并确认模型文件存在且与当前环境兼容。"
+                f"原始错误：{exc}"
             ) from exc
 
         self.class_names: dict[int, str] = self.model.names
@@ -182,7 +190,7 @@ class YOLODetector:
             max_det=cfg.max_detections,
             classes=cfg.classes,
             device=self.device,
-            half=cfg.half_precision,
+            **cfg.precision_kwargs,
             verbose=False,
         )
         elapsed_ms = (time.perf_counter() - start) * 1000
@@ -213,7 +221,7 @@ class YOLODetector:
             max_det=cfg.max_detections,
             classes=cfg.classes,
             device=self.device,
-            half=cfg.half_precision,
+            **cfg.precision_kwargs,
             verbose=False,
         )
         total_elapsed_ms = (time.perf_counter() - start) * 1000
@@ -263,7 +271,7 @@ class YOLODetector:
             max_det=cfg.max_detections,
             classes=cfg.classes,
             device=self.device,
-            half=cfg.half_precision,
+            **cfg.precision_kwargs,
             stream=True,
             verbose=False,
             **extra_kwargs,

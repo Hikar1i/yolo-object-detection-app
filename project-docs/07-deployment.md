@@ -1,6 +1,8 @@
-# Deployment Guide
+# 部署指南
 
-## System requirements
+## 资源选型参考
+
+以下为原指南的选型建议，尚未进行对应硬件的性能验证，实际需求取决于模型、分辨率和并发。
 
 | Tier | CPU | RAM | GPU | Notes |
 |---|---|---|---|---|
@@ -10,10 +12,7 @@
 
 ## 1. Local deployment
 
-```bash
-streamlit run src/app.py
-```
-See `docs/USAGE.md` for flags and `docs/INSTALLATION.md` for environment setup.
+启动命令与本机 Conda 环境统一见 [环境与安装](08-environments.md)。页面及程序操作见 [使用指南](11-usage.md)。
 
 ## 2. Docker deployment
 
@@ -23,6 +22,15 @@ See `docs/USAGE.md` for flags and `docs/INSTALLATION.md` for environment setup.
 docker compose up --build -d
 docker compose logs -f
 ```
+
+也可不使用 Compose：
+
+```bash
+docker build -t yolov8-detection-app .
+docker run -p 8501:8501 -v "$(pwd)/models:/app/models" -v "$(pwd)/outputs:/app/outputs" -v "$(pwd)/logs:/app/logs" yolov8-detection-app
+```
+
+访问 **http://localhost:8501**。Compose 已挂载 `models/`、`outputs/` 与 `logs/`。
 
 ### GPU (NVIDIA host)
 
@@ -37,7 +45,9 @@ docker compose logs -f
 
 ## 3. Cloud deployment
 
-### Streamlit Community Cloud (free, easiest)
+以下为原指南提供的部署路径，本项目未在这些云平台进行验证；平台当前规格、价格及控制台流程需部署时核对。
+
+### Streamlit Community Cloud
 
 1. Push this repo to GitHub (public or connected private repo).
 2. Go to [share.streamlit.io](https://share.streamlit.io) → **New app**.
@@ -75,7 +85,7 @@ docker compose logs -f
 - **HTTPS is required for webcam access** (the *Real-time Detection* tab) on
   every platform except `localhost` — all cloud options above provide it by
   default.
-- Mount `outputs/` and `logs/` as persistent volumes if you need detection
+- Mount `models/`, `outputs/` and `logs/` as persistent volumes if you need detection
   history to survive restarts (see `docker-compose.yml`).
 - For multi-user traffic, front the FastAPI service (`src/api.py`) with a
   process manager (`gunicorn -k uvicorn.workers.UvicornWorker`) instead of

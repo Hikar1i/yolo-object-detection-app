@@ -13,9 +13,11 @@ from src.utils import (
     draw_detections,
     format_bytes,
     get_box_color,
+    get_available_models,
     load_history,
     pil_to_bgr,
     save_history_record,
+    save_uploaded_model,
     validate_file_size,
 )
 
@@ -85,7 +87,7 @@ def test_validate_file_size_rejects_oversized_file() -> None:
     too_big = (config.MAX_UPLOAD_SIZE_MB + 1) * 1024 * 1024
     valid, msg = validate_file_size(too_big)
     assert valid is False
-    assert "too large" in msg.lower()
+    assert "文件过大" in msg
 
 
 def test_save_and_load_history_roundtrip(tmp_path, monkeypatch) -> None:
@@ -108,3 +110,55 @@ def test_save_and_load_history_roundtrip(tmp_path, monkeypatch) -> None:
     assert rows[0]["source_type"] == "image"
     assert rows[0]["num_detections"] == "3"
     assert rows[0]["classes_detected"] == "person|car|person"
+
+
+def test_upload_model_preserves_existing_file(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(config, "MODELS_DIR", tmp_path)
+    path = save_uploaded_model("自定义.pt", b"original weights")
+    assert path.read_bytes() == b"original weights"
+    with pytest.raises(FileExistsError):
+        save_uploaded_model("自定义.pt", b"replacement weights")
+    assert path.read_bytes() == b"original weights"
+    assert list(tmp_path.iterdir()) == [path]
+
+
+@pytest.mark.parametrize("filename,contents", [
+    ("../outside.pt", b"weights"), ("dir/model.pt", b"weights"),
+    ("dir\\model.pt", b"weights"), ("bad\x00.pt", b"weights"),
+    ("model.onnx", b"weights"), ("model.pt", b""), ("", b"weights"),
+])
+def test_upload_model_rejects_invalid_input(tmp_path, monkeypatch, filename, contents) -> None:
+    monkeypatch.setattr(config, "MODELS_DIR", tmp_path)
+    with pytest.raises(ValueError):
+        save_uploaded_model(filename, contents)
+    assert not list(tmp_path.iterdir())
+
+
+def test_upload_model_checks_size_limit(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(config, "MODELS_DIR", tmp_path)
+    monkeypatch.setattr(config, "MAX_UPLOAD_SIZE_MB", 1)
+    with pytest.raises(ValueError, match="文件过大"):
+        save_uploaded_model("model.pt", b"a" * (1024 * 1024 + 1))
+    assert not list(tmp_path.iterdir())
+
+
+def test_available_models_include_local_paths(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(config, "MODELS_DIR", tmp_path)
+    local = save_uploaded_model("custom.PT", b"weights")
+    (tmp_path / "incomplete.upload").write_bytes(b"partial")
+    (tmp_path / "directory.pt").mkdir()
+    (tmp_path / "link.pt").symlink_to(local)
+    models = get_available_models()
+    assert models == {**config.AVAILABLE_MODELS, "本地模型：custom.PT": str(local.resolve())}
+
+
+def test_upload_model_cleans_up_after_publish_failure(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(config, "MODELS_DIR", tmp_path)
+
+    def denied(*args):
+        raise PermissionError("permission denied")
+
+    monkeypatch.setattr("src.utils.os.link", denied)
+    with pytest.raises(PermissionError):
+        save_uploaded_model("model.pt", b"weights")
+    assert not list(tmp_path.iterdir())

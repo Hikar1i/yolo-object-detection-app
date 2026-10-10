@@ -1,4 +1,4 @@
-# REST API Reference
+# REST API 接口
 
 The optional FastAPI service in `src/api.py` exposes headless detection for
 non-Streamlit clients (scripts, mobile apps, other backends).
@@ -38,15 +38,15 @@ Liveness + device info.
 ```
 
 ### `GET /models`
-Available model identifiers.
+内置官方模型的显示名称与权重标识。本地上传模型仅供 Web 页面使用，不加入此 API 列表。
 
 ```json
 {
-  "YOLOv8 Nano (fastest, least accurate)": "yolov8n.pt",
+  "YOLOv8 Nano（速度最快，精度较低）": "yolov8n.pt",
   "YOLOv8 Small": "yolov8s.pt",
   "YOLOv8 Medium": "yolov8m.pt",
   "YOLOv8 Large": "yolov8l.pt",
-  "YOLOv8 X-Large (slowest, most accurate)": "yolov8x.pt"
+  "YOLOv8 X-Large（速度最慢，精度较高）": "yolov8x.pt"
 }
 ```
 
@@ -62,7 +62,7 @@ Runs detection on an uploaded image.
 | `confidence` | float | `0.25` | Minimum confidence, `0.0`–`1.0` |
 | `iou` | float | `0.45` | NMS IoU threshold, `0.0`–`1.0` |
 
-**Body** — `multipart/form-data` with a `file` field (jpg/png/bmp/webp).
+**Body** — `multipart/form-data`，字段名为 `file`。服务通过 Pillow 解码图片；代码未按扩展名限制上传类型，无法解码时返回 `400`。
 
 **Response** — `200 OK`
 
@@ -83,6 +83,8 @@ Runs detection on an uploaded image.
   ]
 }
 ```
+
+注意：`/predict` 仅接受 `/models` 中的官方权重标识，不接受本地路径。
 
 **Errors**
 

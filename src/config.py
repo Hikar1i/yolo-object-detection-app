@@ -29,14 +29,14 @@ for _dir in (MODELS_DIR, OUTPUTS_DIR, LOGS_DIR):
 # Ultralytics auto-downloads weights on first use, so only the identifier is
 # required. Keys are the human-friendly labels shown in the UI.
 AVAILABLE_MODELS: Final[dict[str, str]] = {
-    "YOLOv8 Nano (fastest, least accurate)": "yolov8n.pt",
+    "YOLOv8 Nano（速度最快，精度较低）": "yolov8n.pt",
     "YOLOv8 Small": "yolov8s.pt",
     "YOLOv8 Medium": "yolov8m.pt",
     "YOLOv8 Large": "yolov8l.pt",
-    "YOLOv8 X-Large (slowest, most accurate)": "yolov8x.pt",
+    "YOLOv8 X-Large（速度最慢，精度较高）": "yolov8x.pt",
 }
 
-DEFAULT_MODEL_KEY: Final[str] = "YOLOv8 Nano (fastest, least accurate)"
+DEFAULT_MODEL_KEY: Final[str] = "YOLOv8 Nano（速度最快，精度较低）"
 DEFAULT_MODEL_NAME: Final[str] = AVAILABLE_MODELS[DEFAULT_MODEL_KEY]
 
 # Approximate published benchmarks (COCO val, mAP50-95, single V100 GPU).
@@ -84,7 +84,7 @@ MAX_UPLOAD_SIZE_MB: Final[int] = 200
 # --------------------------------------------------------------------------- #
 # UI
 # --------------------------------------------------------------------------- #
-APP_TITLE: Final[str] = "YOLOv8 Object Detection"
+APP_TITLE: Final[str] = "YOLOv8 目标检测"
 APP_ICON: Final[str] = "🎯"
 PAGE_LAYOUT: Final[str] = "wide"
 

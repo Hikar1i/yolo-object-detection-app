@@ -20,6 +20,31 @@
 
 ---
 
+## 本地页面说明
+
+Web 页面使用中文，包含图片检测、视频检测、实时检测、模型对比、统计分析和使用说明。
+
+在侧栏展开 **上传模型**，上传可信的 YOLO `.pt` 目标检测权重并点击 **保存模型**。
+文件最大 200 MB，保存至 `models/`，不覆盖同名文件；保存后自动选中，可用于图片、视频、实时检测与模型对比。
+上传阶段仅保存文件，模型兼容性在推理加载时检查。本地自定义权重不提供官方 COCO 基准指标。
+加载不可信的 `.pt` 权重可能执行代码，因此该入口仅面向可信用户。REST API 的 `/models` 和 `/predict` 仍仅支持内置官方模型。
+YOLO 模型名、CUDA、FPS、IoU 等技术名称保留英文；模型输出的类别名称按权重原始定义显示。
+页面文本和表格标题的中文化不改变检测历史 CSV 的字段名与来源值。
+
+本机已安装依赖，可使用 `conda run -n cu12-dev streamlit run src/app.py` 启动。
+运行目录必须对启动用户可写：`models/`、`outputs/`、`logs/`（包含已有的 `logs/app.log`）。
+项目文档统一位于 `project-docs/`：
+
+| 文档 | 内容 |
+|---|---|
+| [架构](project-docs/02-architecture.md) | 模块职责、模型上传与推理精度 |
+| [API 接口](project-docs/04-api.md) | 启动、请求响应与调用示例 |
+| [测试策略](project-docs/06-testing-strategy.md) | 测试命令、覆盖范围与限制 |
+| [部署](project-docs/07-deployment.md) | Docker、GPU、云平台与持久化 |
+| [环境与安装](project-docs/08-environments.md) | Conda、本地安装与 GPU 配置 |
+| [已知问题](project-docs/09-known-issues.md) | 运行故障及已验证的修复 |
+| [使用指南](project-docs/11-usage.md) | 中文页面、模型上传与程序调用 |
+
 ## ✨ Features
 
 | Category | Details |
@@ -96,11 +121,14 @@ yolov8-object-detection-app/
 ├── assets/
 │   ├── sample_images/       # bus.jpg, zidane.jpg (bundled test images)
 │   └── sample_video/
-├── docs/
-│   ├── INSTALLATION.md
-│   ├── USAGE.md
-│   ├── DEPLOYMENT.md
-│   └── API.md
+├── project-docs/
+│   ├── 02-architecture.md
+│   ├── 04-api.md
+│   ├── 06-testing-strategy.md
+│   ├── 07-deployment.md
+│   ├── 08-environments.md
+│   ├── 09-known-issues.md
+│   └── 11-usage.md
 ├── tests/
 │   ├── test_detector.py
 │   └── test_utils.py
@@ -128,7 +156,7 @@ Open **http://localhost:8501** — the app loads the YOLOv8-Nano model by
 default (auto-downloaded on first run) and is ready to use immediately with
 the bundled sample images.
 
-Full setup details (GPU/CUDA, troubleshooting): **[docs/INSTALLATION.md](docs/INSTALLATION.md)**.
+Full setup details (GPU/CUDA, troubleshooting): **[project-docs/08-environments.md](project-docs/08-environments.md)**.
 
 ### Docker
 
@@ -136,7 +164,7 @@ Full setup details (GPU/CUDA, troubleshooting): **[docs/INSTALLATION.md](docs/IN
 docker compose up --build
 ```
 
-See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for Docker GPU support and
+See **[project-docs/07-deployment.md](project-docs/07-deployment.md)** for Docker GPU support and
 cloud deployment (Streamlit Community Cloud, Railway, Render, Hugging Face
 Spaces).
 
@@ -169,7 +197,7 @@ uvicorn src.api:app --reload --port 8000
 # then open http://localhost:8000/docs for interactive Swagger UI
 ```
 
-See **[docs/API.md](docs/API.md)** for the full endpoint reference and
+See **[project-docs/04-api.md](project-docs/04-api.md)** for the full endpoint reference and
 `curl`/Python examples.
 
 ## 🛠️ Troubleshooting
@@ -178,11 +206,11 @@ See **[docs/API.md](docs/API.md)** for the full endpoint reference and
 |---|---|
 | `RuntimeError: Could not load model` | Check internet access — weights auto-download on first use from Ultralytics. |
 | Webcam tab shows an install warning | `pip install streamlit-webrtc av` |
-| CUDA not detected despite having a GPU | Reinstall PyTorch from the CUDA-matched index — see `docs/INSTALLATION.md`. |
+| CUDA not detected despite having a GPU | Reinstall PyTorch from the CUDA-matched index — see `project-docs/08-environments.md`. |
 | Slow inference on CPU | Use YOLOv8-Nano/Small and/or reduce the inference image size in the sidebar. |
 | `ffmpeg`/video codec errors in Docker | Rebuild — the image installs `ffmpeg` and `libgl1` for OpenCV/video support. |
 
-More in **[docs/USAGE.md](docs/USAGE.md)**.
+More in **[project-docs/11-usage.md](project-docs/11-usage.md)**.
 
 ## 🗺️ Future Improvements
 

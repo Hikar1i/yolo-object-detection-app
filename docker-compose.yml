@@ -17,7 +17,7 @@ services:
 
     # --- GPU support (requires nvidia-container-toolkit on the host) ---
     # Uncomment the block below to enable CUDA acceleration inside the
-    # container, and see docs/DEPLOYMENT.md for the one-time host setup.
+    # container, and see project-docs/07-deployment.md for the one-time host setup.
     # deploy:
     #   resources:
     #     reservations:
